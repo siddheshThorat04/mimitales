@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum AgeBand {
+  AGE_3_4  @map("3-4")
+  AGE_5_6  @map("5-6")
+  AGE_7_8  @map("7-8")
+  AGE_9_10 @map("9-10")
+}
+
+enum StoryStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum CallChannel {
+  BROWSER
+  PHONE
+}
+
+enum CallStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  DISCONNECTED
+}
+
+enum WalletTxType {
+  TOP_UP
+  CALL_RESERVATION
+  CALL_CHARGE
+  CALL_REFUND
+  ADMIN_ADJUSTMENT
+}
+
+enum WalletTxStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// ---------- Accounts ----------
+
+model ParentAccount {
+  id              String    @id @default(uuid()) @db.Uuid
+  email           String    @unique
+  passwordHash    String
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  children     ChildProfile[]
+  stories      Story[]
+  callSessions CallSession[]
+  controls     ParentControls?
+  wallet       Wallet?
+
+  @@map("parent_accounts")
+}
+
+model ChildProfile {
+  id                String   @id @default(uuid()) @db.Uuid
+  parentId          String   @db.Uuid
+  displayName       String
+  ageBand           AgeBand
+  preferredLanguage String   @default("en-IN")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  parent       ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  stories      Story[]
+  callSessions CallSession[]
+
+  @@index([parentId])
+  @@map("child_profiles")
+}
+
+model ParentControls {
+  id               String   @id @default(uuid()) @db.Uuid
+  parentId         String   @unique @db.Uuid
+  dailyLimitMinutes Int     @default(30)
+  maxCallMinutes   Int      @default(15)
+  allowedLanguages String[] @default(["en-IN", "hi-IN", "mr-IN"])
+  voicePaused      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@map("parent_controls")
+}
+
+// ---------- Characters and worlds (configuration-driven) ----------
+
+model Character {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  name      String
+  config    Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stories Story[]
+
+  @@map("characters")
+}
+
+model StoryWorld {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  name      String
+  config    Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stories Story[]
+
+  @@map("story_worlds")
+}
+
+// ---------- Stories ----------
+
+model Story {
+  id          String      @id @default(uuid()) @db.Uuid
+  parentId    String      @db.Uuid
+  childId     String      @db.Uuid
+  characterId String      @db.Uuid
+  worldId     String      @db.Uuid
+  language    String
+  title       String
+  status      StoryStatus @default(ACTIVE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  parent       ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  child        ChildProfile  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  character    Character     @relation(fields: [characterId], references: [id])
+  world        StoryWorld    @relation(fields: [worldId], references: [id])
+  memory       StoryMemory?
+  episodes     StoryEpisode[]
+  callSessions CallSession[]
+
+  @@index([parentId])
+  @@index([childId])
+  @@map("stories")
+}
+
+model StoryMemory {
+  id        String   @id @default(uuid()) @db.Uuid
+  storyId   String   @unique @db.Uuid
+  state     Json
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@map("story_memory")
+}
+
+model StoryEpisode {
+  id            String    @id @default(uuid()) @db.Uuid
+  storyId       String    @db.Uuid
+  episodeNumber Int
+  summary       String
+  choices       Json      @default("[]")
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, episodeNumber])
+  @@map("story_episodes")
+}
+
+// ---------- Calls (metadata only, no audio, no transcripts) ----------
+
+model CallSession {
+  id              String      @id @default(uuid()) @db.Uuid
+  parentId        String      @db.Uuid
+  childId         String      @db.Uuid
+  storyId         String?     @db.Uuid
+  channel         CallChannel
+  language        String
+  status          CallStatus  @default(PENDING)
+  startedAt       DateTime?
+  endedAt         DateTime?
+  durationSeconds Int?
+  createdAt       DateTime    @default(now())
+
+  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  child  ChildProfile  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  story  Story?        @relation(fields: [storyId], references: [id], onDelete: SetNull)
+  charge CallCharge?
+
+  @@index([parentId, createdAt])
+  @@map("call_sessions")
+}
+
+// ---------- Wallet (all money in integer paise) ----------
+
+model Wallet {
+  id           String   @id @default(uuid()) @db.Uuid
+  parentId     String   @unique @db.Uuid
+  balancePaise BigInt   @default(0)
+  currency     String   @default("INR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  parent       ParentAccount       @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id             String         @id @default(uuid()) @db.Uuid
+  walletId       String         @db.Uuid
+  type           WalletTxType
+  amountPaise    BigInt
+  referenceId    String?
+  idempotencyKey String?        @unique
+  status         WalletTxStatus @default(PENDING)
+  createdAt      DateTime       @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+  @@map("wallet_transactions")
+}
+
+model CallCharge {
+  id            String   @id @default(uuid()) @db.Uuid
+  callSessionId String   @unique @db.Uuid
+  reservedPaise BigInt   @default(0)
+  chargedPaise  BigInt   @default(0)
+  refundedPaise BigInt   @default(0)
+  createdAt     DateTime @default(now())
+
+  callSession CallSession @relation(fields: [callSessionId], references: [id], onDelete: Cascade)
+
+  @@map("call_charges")
+}
+
+// ---------- Languages ----------
+
+model LanguageConfig {
+  code                      String   @id
+  name                      String
+  speechRecognitionSupported Boolean @default(false)
+  textGenerationSupported   Boolean  @default(false)
+  speechSynthesisSupported  Boolean  @default(false)
+  defaultVoice              String?
+  // Stays false until the language has passed real voice testing.
+  enabled                   Boolean  @default(false)
+  updatedAt                 DateTime @updatedAt
+
+  @@map("language_configs")
+}
