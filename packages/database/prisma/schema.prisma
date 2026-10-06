@@ -268,3 +268,17 @@ model LanguageConfig {
 
   @@map("language_configs")
 }
+
+// ---------- Audit ----------
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  parentId  String?  @db.Uuid
+  action    String
+  requestId String?
+  createdAt DateTime @default(now())
+
+  // No relation on purpose: audit records outlive account deletion.
+  @@index([parentId, createdAt])
+  @@map("audit_logs")
+}

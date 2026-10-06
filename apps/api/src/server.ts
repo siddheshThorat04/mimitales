@@ -2,7 +2,9 @@ import { loadEnv } from "@mimitales/config";
 import { prisma } from "@mimitales/database";
 import { Redis } from "ioredis";
 import { buildApp } from "./app";
-
+import { PrismaAuthRepo } from "./auth/prisma-repo";
+import { RedisSessionStore } from "./auth/sessions";
+import { RedisLoginThrottle } from "./auth/throttle";
 const env = loadEnv();
 
 const redis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 1 });
@@ -15,11 +17,20 @@ const app = await buildApp({
     database: async () => {
       await prisma.$queryRaw`SELECT 1`;
     },
+
     redis: async () => {
       await redis.ping();
     },
   },
+  auth: {
+    repo: new PrismaAuthRepo(prisma),
+    sessions: new RedisSessionStore(redis),
+    throttle: new RedisLoginThrottle(redis),
+    webOrigin: env.WEB_ORIGIN,
+    secureCookies: env.NODE_ENV === "production",
+  },
 });
+
 
 async function shutdown(signal: string) {
   app.log.info({ signal }, "shutting down");

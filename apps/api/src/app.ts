@@ -2,12 +2,16 @@ import { randomUUID } from "node:crypto";
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
-
+import { registerAuth, type AuthDeps } from "./auth/routes";
 export interface HealthChecks {
   database: () => Promise<void>;
   redis: () => Promise<void>;
 }
-
+export interface AppOptions {
+  checks: HealthChecks;
+  auth: AuthDeps;
+  logger?: boolean;
+}
 export interface AppOptions {
   checks: HealthChecks;
   logger?: boolean;
@@ -47,7 +51,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
 
   await app.register(helmet);
   await app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
-
+    await registerAuth(app, opts.auth);
   app.addHook("onRequest", async (req, reply) => {
     reply.header("x-request-id", req.id);
   });
