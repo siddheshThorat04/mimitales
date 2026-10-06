@@ -7,6 +7,7 @@ const apiUrl = process.env.API_URL ?? "http://localhost:4000";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["@mimitales/shared"],
   poweredByHeader: false,
   outputFileTracingRoot: path.join(here, "../.."),
   async rewrites() {

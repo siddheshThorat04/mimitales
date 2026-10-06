@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { ChildrenManager } from "../../components/ChildrenManager";
 import { LogoutButton } from "../../components/LogoutButton";
 import { getSession } from "../../lib/auth";
+import { getChildren } from "../../lib/children";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,7 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const readiness = await getReadiness();
+  const [readiness, children] = await Promise.all([getReadiness(), getChildren()]);
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -35,9 +37,15 @@ export default async function DashboardPage() {
         <LogoutButton csrfToken={session.csrfToken} />
       </header>
       <p className="mt-2 text-slate-600">Signed in as {session.parent.email}</p>
-      <p className="mt-1 text-slate-600">
-        Child profiles arrive in Milestone 2.
-      </p>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-lg font-semibold">Children</h2>
+        {children === null ? (
+          <p className="text-red-600">Could not load profiles. Please refresh the page.</p>
+        ) : (
+          <ChildrenManager items={children} csrfToken={session.csrfToken} />
+        )}
+      </section>
 
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="text-lg font-semibold">System status</h2>
