@@ -13,4 +13,9 @@ export default tseslint.config(
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    // Plain JS config files run in Node.
+    files: ["**/*.mjs"],
+    languageOptions: { globals: { process: "readonly" } },
+  },
 );

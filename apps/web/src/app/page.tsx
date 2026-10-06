@@ -7,12 +7,20 @@ export default function HomePage() {
       <p className="text-lg text-slate-600">
         A safe, multilingual storytelling companion for children.
       </p>
-      <Link
-        href="/dashboard"
-        className="rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
-      >
-        Parent dashboard
-      </Link>
+      <div className="flex gap-3">
+        <Link
+          href="/login"
+          className="rounded-full bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700"
+        >
+          Sign in
+        </Link>
+        <Link
+          href="/register"
+          className="rounded-full border border-indigo-600 px-6 py-3 font-semibold text-indigo-700 hover:bg-indigo-50"
+        >
+          Create account
+        </Link>
+      </div>
     </main>
   );
 }
