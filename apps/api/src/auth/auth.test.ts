@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { buildApp } from "../app";
 import { SESSION_COOKIE } from "./routes";
 import { makeTestAuth } from "./testing";
+import { MemoryChildRepo } from "../children/testing";
 
 const creds = { email: "Parent@Example.com", password: "correct horse battery" };
 
@@ -13,6 +14,7 @@ async function setup() {
   const instance = await buildApp({
     logger: false,
     auth,
+    children: new MemoryChildRepo(),
     checks: { database: async () => {}, redis: async () => {} },
   });
   app = instance;

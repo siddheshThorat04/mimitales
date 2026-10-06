@@ -41,6 +41,9 @@ importers:
       '@mimitales/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@mimitales/shared':
+        specifier: workspace:^
+        version: link:../../packages/shared
       '@node-rs/argon2':
         specifier: ^2.2.1
         version: 2.2.1
@@ -72,6 +75,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@mimitales/shared':
+        specifier: workspace:^
+        version: link:../../packages/shared
       next:
         specifier: ^15.0.0
         version: 15.5.27(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
