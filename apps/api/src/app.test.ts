@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { buildApp, type HealthChecks } from "./app";
 import { makeTestAuth } from "./auth/testing";
 import { MemoryChildRepo } from "./children/testing";
+import { makeTestCatalog } from "./catalog/testing";
 const healthy: HealthChecks = {
   database: async () => {},
   redis: async () => {},
@@ -11,7 +12,7 @@ const healthy: HealthChecks = {
 let app: FastifyInstance | undefined;
 
 async function make(checks: HealthChecks) {
-  app = await buildApp({ checks, auth: makeTestAuth(),  children: new MemoryChildRepo(), logger: false });
+  app = await buildApp({ checks, auth: makeTestAuth(),  children: new MemoryChildRepo(), logger: false, catalog: makeTestCatalog() });
   return app;
 }
 

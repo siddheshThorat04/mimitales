@@ -5,6 +5,7 @@ import { buildApp } from "./app";
 import { PrismaAuthRepo } from "./auth/prisma-repo";
 import { RedisSessionStore } from "./auth/sessions";
 import { RedisLoginThrottle } from "./auth/throttle";
+import { PrismaCatalogRepo } from "./catalog/prisma-repo";
 import { PrismaChildRepo } from "./children/prisma-repo";
 const env = loadEnv();
 
@@ -31,6 +32,7 @@ const app = await buildApp({
     secureCookies: env.NODE_ENV === "production",
   },
     children: new PrismaChildRepo(prisma),
+    catalog: new PrismaCatalogRepo(prisma),
 });
 
 

@@ -5,6 +5,8 @@ import rateLimit from "@fastify/rate-limit";
 import { registerAuth, type AuthDeps } from "./auth/routes";
 import type { ChildRepo } from "./children/repo";
 import { registerChildRoutes } from "./children/routes";
+import type { CatalogRepo } from "./catalog/repo";
+import { registerCatalogRoutes } from "./catalog/routes";
 export interface HealthChecks {
   database: () => Promise<void>;
   redis: () => Promise<void>;
@@ -14,6 +16,7 @@ export interface AppOptions {
   checks: HealthChecks;
   auth: AuthDeps;
   children: ChildRepo;
+  catalog: CatalogRepo;
   logger?: boolean;
 }
 
@@ -57,6 +60,7 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
     audit: (action, parentId, requestId) => opts.auth.repo.audit(action, parentId, requestId),
     guards,
   });
+  await registerCatalogRoutes(app, { repo: opts.catalog, guards });
   app.addHook("onRequest", async (req, reply) => {
     reply.header("x-request-id", req.id);
   });
