@@ -6,7 +6,7 @@ import { makeTestAuth } from "../auth/testing";
 import { MemoryChildRepo } from "../children/testing";
 import type { CatalogRow } from "./repo";
 import { MemoryCatalogRepo, contentCharacterRows, contentWorldRows } from "./testing";
-
+import { makeTestStories } from "../stories/testing";
 let app: FastifyInstance | undefined;
 
 async function setup(characterRows: CatalogRow[] = contentCharacterRows) {
@@ -15,6 +15,7 @@ async function setup(characterRows: CatalogRow[] = contentCharacterRows) {
     auth: makeTestAuth(),
     children: new MemoryChildRepo(),
     catalog: new MemoryCatalogRepo(characterRows, contentWorldRows),
+    stories: makeTestStories(),
     checks: { database: async () => {}, redis: async () => {} },
   });
   app = instance;

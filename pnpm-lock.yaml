@@ -41,6 +41,9 @@ importers:
       '@mimitales/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@mimitales/providers':
+        specifier: workspace:^
+        version: link:../../packages/providers
       '@mimitales/shared':
         specifier: workspace:^
         version: link:../../packages/shared

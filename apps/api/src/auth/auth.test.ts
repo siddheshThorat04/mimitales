@@ -5,6 +5,7 @@ import { SESSION_COOKIE } from "./routes";
 import { makeTestAuth } from "./testing";
 import { MemoryChildRepo } from "../children/testing";
 import { makeTestCatalog } from "../catalog/testing";
+import { makeTestStories } from "../stories/testing";
 const creds = { email: "Parent@Example.com", password: "correct horse battery" };
 
 let app: FastifyInstance | undefined;
@@ -15,8 +16,9 @@ async function setup() {
     logger: false,
     auth,
     children: new MemoryChildRepo(),
-    checks: { database: async () => {}, redis: async () => {} },
+    stories: makeTestStories(),
     catalog: makeTestCatalog(),
+    checks: { database: async () => {}, redis: async () => {} },
   });
   app = instance;
   return {

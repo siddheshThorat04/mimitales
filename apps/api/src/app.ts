@@ -7,6 +7,8 @@ import type { ChildRepo } from "./children/repo";
 import { registerChildRoutes } from "./children/routes";
 import type { CatalogRepo } from "./catalog/repo";
 import { registerCatalogRoutes } from "./catalog/routes";
+import { registerStoryRoutes } from "./stories/routes";
+import { StoryService, type StoryDeps } from "./stories/service";
 export interface HealthChecks {
   database: () => Promise<void>;
   redis: () => Promise<void>;
@@ -17,6 +19,7 @@ export interface AppOptions {
   auth: AuthDeps;
   children: ChildRepo;
   catalog: CatalogRepo;
+  stories: StoryDeps;
   logger?: boolean;
 }
 
@@ -63,6 +66,10 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
   await registerCatalogRoutes(app, { repo: opts.catalog, guards });
   app.addHook("onRequest", async (req, reply) => {
     reply.header("x-request-id", req.id);
+  });
+  await registerStoryRoutes(app, {
+    service: new StoryService({ ...opts.stories, children: opts.children, catalog: opts.catalog }),
+    guards,
   });
 
   // Liveness: the process is up.

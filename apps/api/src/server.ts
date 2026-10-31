@@ -7,6 +7,10 @@ import { RedisSessionStore } from "./auth/sessions";
 import { RedisLoginThrottle } from "./auth/throttle";
 import { PrismaCatalogRepo } from "./catalog/prisma-repo";
 import { PrismaChildRepo } from "./children/prisma-repo";
+import { UnconfiguredLLMProvider } from "@mimitales/providers";
+import { StoryEngine } from "@mimitales/story-engine";
+import { RedisTurnHistory } from "./stories/history";
+import { PrismaStoryRepo } from "./stories/prisma-repo";
 const env = loadEnv();
 
 const redis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 1 });
@@ -33,6 +37,11 @@ const app = await buildApp({
   },
     children: new PrismaChildRepo(prisma),
     catalog: new PrismaCatalogRepo(prisma),
+    stories: {
+    repo: new PrismaStoryRepo(prisma),
+    engine: new StoryEngine(new UnconfiguredLLMProvider()),
+    history: new RedisTurnHistory(redis),
+  },
 });
 
 
