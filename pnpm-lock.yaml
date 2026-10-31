@@ -154,6 +154,15 @@ importers:
         specifier: ^2.1.2
         version: 2.1.9(@types/node@22.20.5)
 
+  packages/providers:
+    devDependencies:
+      typescript:
+        specifier: ^5.6.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.2
+        version: 2.1.9(@types/node@22.20.5)
+
   packages/shared:
     devDependencies:
       typescript:
@@ -165,6 +174,9 @@ importers:
 
   packages/story-engine:
     dependencies:
+      '@mimitales/providers':
+        specifier: workspace:*
+        version: link:../providers
       '@mimitales/shared':
         specifier: workspace:*
         version: link:../shared
