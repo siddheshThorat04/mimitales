@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { CharacterCatalog } from "../../components/CharacterCatalog";
 import { ChildrenManager } from "../../components/ChildrenManager";
 import { LogoutButton } from "../../components/LogoutButton";
 import { getSession } from "../../lib/auth";
+import { getCatalog } from "../../lib/catalog";
 import { getChildren } from "../../lib/children";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +30,11 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const [readiness, children] = await Promise.all([getReadiness(), getChildren()]);
+  const [readiness, children, catalog] = await Promise.all([
+    getReadiness(),
+    getChildren(),
+    getCatalog(),
+  ]);
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -44,6 +50,15 @@ export default async function DashboardPage() {
           <p className="text-red-600">Could not load profiles. Please refresh the page.</p>
         ) : (
           <ChildrenManager items={children} csrfToken={session.csrfToken} />
+        )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-lg font-semibold">Meet the characters</h2>
+        {catalog === null ? (
+          <p className="text-red-600">Could not load characters. Please refresh the page.</p>
+        ) : (
+          <CharacterCatalog characters={catalog.characters} worlds={catalog.worlds} />
         )}
       </section>
 
