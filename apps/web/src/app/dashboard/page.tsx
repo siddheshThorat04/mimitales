@@ -60,6 +60,11 @@ export default async function DashboardPage() {
         ) : (
           <CharacterCatalog characters={catalog.characters} worlds={catalog.worlds} />
         )}
+        <p className="mt-3 text-sm">
+          <a href="/play" className="text-indigo-700 underline">
+            Open the story tester (development)
+          </a>
+        </p>
       </section>
 
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">

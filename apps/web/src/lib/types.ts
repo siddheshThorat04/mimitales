@@ -23,3 +23,26 @@ export interface CatalogWorld {
   tagline: LocalizedText;
   description: LocalizedText;
 }
+
+export interface Story {
+  id: string;
+  childId: string;
+  characterSlug: string;
+  worldSlug: string;
+  language: string;
+  title: string;
+  status: string;
+  episodeCount: number;
+  createdAt: string;
+}
+
+export interface ParentMemory {
+  world: string;
+  currentLocation: string;
+  mission: string;
+  currentProblem: string;
+  nextGoal: string;
+  friends: string[];
+  inventory: string[];
+  lastSceneSummary: string;
+}
