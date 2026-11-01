@@ -53,7 +53,7 @@ export class StoryEngine {
   constructor(
     private readonly llm: LLMProvider,
     private readonly safety: SafetyHooks = passthroughSafety,
-  ) {}
+  ) { }
 
   /** One turn. On any failure the memory is returned exactly as it came in. */
   async takeTurn(ctx: PromptContext, kind: TurnKind): Promise<TurnResult> {
@@ -101,7 +101,10 @@ export class StoryEngine {
 
       let memory: StoryMemory;
       try {
-        memory = applyDelta(ctx.memory, output.stateDelta);
+        // Only a child's own turn can record a choice. Offered options never count.
+        const delta =
+          kind.type === "child" ? output.stateDelta : { ...output.stateDelta, addChoices: [] };
+        memory = applyDelta(ctx.memory, delta);
       } catch {
         lastReason = "invalid_output";
         needsRepair = true;

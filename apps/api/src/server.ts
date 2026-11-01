@@ -7,7 +7,8 @@ import { RedisSessionStore } from "./auth/sessions";
 import { RedisLoginThrottle } from "./auth/throttle";
 import { PrismaCatalogRepo } from "./catalog/prisma-repo";
 import { PrismaChildRepo } from "./children/prisma-repo";
-import { UnconfiguredLLMProvider } from "@mimitales/providers";
+// import { UnconfiguredLLMProvider } from "@mimitales/providers";
+import { createLLMProvider } from "./llm"
 import { StoryEngine } from "@mimitales/story-engine";
 import { RedisTurnHistory } from "./stories/history";
 import { PrismaStoryRepo } from "./stories/prisma-repo";
@@ -39,7 +40,7 @@ const app = await buildApp({
     catalog: new PrismaCatalogRepo(prisma),
     stories: {
     repo: new PrismaStoryRepo(prisma),
-    engine: new StoryEngine(new UnconfiguredLLMProvider()),
+    engine: new StoryEngine(createLLMProvider(env)),
     history: new RedisTurnHistory(redis),
   },
 });

@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:seed": "dotenv -e ../../.env -- tsx src/seed.ts",
-    "test:int": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.ts"
+    "test:int": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.ts",
+    "llm:smoke": "dotenv -e ../../.env -- tsx src/llm-smoke.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",

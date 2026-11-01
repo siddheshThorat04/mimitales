@@ -6,16 +6,37 @@ const boolString = (fallback: "true" | "false") =>
     .default(fallback)
     .transform((v) => v === "true");
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
-  WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
-  DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string().url(),
-  AUTH_SECRET: z.string().min(32, "must be at least 32 characters"),
-  DATA_MINIMIZATION: boolString("true"),
-  AUDIO_RETENTION: boolString("false"),
-});
+// A blank value in .env (for example "LLM_API_KEY=") means "not set".
+const blankToUndefined = (value: unknown) =>
+  typeof value === "string" && value.trim() === "" ? undefined : value;
+
+const envSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+    WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
+    DATABASE_URL: z.string().url(),
+    REDIS_URL: z.string().url(),
+    AUTH_SECRET: z.string().min(32, "must be at least 32 characters"),
+    DATA_MINIMIZATION: boolString("true"),
+    AUDIO_RETENTION: boolString("false"),
+    LLM_PROVIDER: z.preprocess(blankToUndefined, z.enum(["none", "gemini"]).default("none")),
+    LLM_MODEL: z.preprocess(blankToUndefined, z.string().trim().min(1).optional()),
+    LLM_API_KEY: z.preprocess(blankToUndefined, z.string().trim().min(1).optional()),
+  })
+  .superRefine((env, ctx) => {
+    if (env.LLM_PROVIDER !== "none") {
+      for (const name of ["LLM_MODEL", "LLM_API_KEY"] as const) {
+        if (!env[name]) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [name],
+            message: `required when LLM_PROVIDER=${env.LLM_PROVIDER}`,
+          });
+        }
+      }
+    }
+  });
 
 export type Env = z.infer<typeof envSchema>;
 
